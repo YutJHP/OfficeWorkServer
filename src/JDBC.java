@@ -31,20 +31,38 @@ public class JDBC {
 		  
 		return query;
 	  }
-	
-	  public void delete(String query) {
-		  
-	  }
 	  
-	  public boolean update(String query) {
+	  public String update(int uID) {
+		  String response = "{ \"valid\": \"false\" }";
 		  
-		  return true;
+		  return response;
 	  }
 
 	public String sendMessage(int uID, String text, ArrayList<Integer> recipients) {
 		  String response = "{ \"valid\": \"false\" }";
 		  
 		  return response;
+	}
+
+	public String createGroup(int uID, String name, ArrayList<Integer> member) {
+		String response = "{ \"valid\": \"false\" }";
+		
+		return response;
+	}
+
+	public String updateStatus(int uID, int status) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String archiveMessage(int uID, int mID) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String delete(int uID, int mID) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

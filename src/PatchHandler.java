@@ -19,6 +19,7 @@ public class PatchHandler implements HttpHandler {
 		InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
 		BufferedReader br = new BufferedReader(isr);
 		String query = br.lines().collect(Collectors.joining());
+		String response = "";
 		
 		try {
 			JSONObject obj = new JSONObject(query);
@@ -26,8 +27,13 @@ public class PatchHandler implements HttpHandler {
 			switch(obj.getString("requestType")){
 			
 			case "UPDATE":
+				response = update(obj);
 				break;
 			case "UPDATESTATUS":
+				response = updateStatus(obj);
+				break;
+			case "ARCHIVEMESSAGE":
+				response = archiveMessage(obj);
 				break;
 			}
 			
@@ -37,7 +43,6 @@ public class PatchHandler implements HttpHandler {
 		}
 
 		// send response
-		String response = "hit";
 		exchange.sendResponseHeaders(200, response.length());
 		OutputStream os = exchange.getResponseBody();
 		os.write(response.toString().getBytes());
@@ -46,7 +51,29 @@ public class PatchHandler implements HttpHandler {
 
 	}
 	
-	public static void parseQuery(String query, Map<String, Object> parameters) throws UnsupportedEncodingException {
+	private String update(JSONObject obj) {
+		JDBC jdbc = new JDBC();
 		
+		int uID = obj.getInt("userID");
+		
+		return jdbc.update(uID);
+	}
+
+	private String updateStatus(JSONObject obj) {
+		JDBC jdbc = new JDBC();
+		
+		int uID = obj.getInt("userID");
+		int status = obj.getInt("status");
+		
+		return jdbc.updateStatus(uID, status);
+	}
+
+	private String archiveMessage(JSONObject obj) {
+		JDBC jdbc = new JDBC();
+		
+		int uID = obj.getInt("userID");
+		int mID = obj.getInt("messageID");
+		
+		return jdbc.archiveMessage(uID, mID);
 	}
 }

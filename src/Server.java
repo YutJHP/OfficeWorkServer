@@ -17,7 +17,5 @@ public class Server {
     	server.setExecutor(null);
     	server.start();
     	
-    	
-    	
     }
 }

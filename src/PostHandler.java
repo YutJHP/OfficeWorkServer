@@ -19,7 +19,6 @@ public class PostHandler implements HttpHandler {
 
 	@Override
 	public void handle(HttpExchange exchange) throws IOException {
-		// parse request
 		System.out.println("Post aquired");
 		InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
 		BufferedReader br = new BufferedReader(isr);
@@ -36,9 +35,6 @@ public class PostHandler implements HttpHandler {
 				break;
 			case "NEWUSER":
 				response = createUser(obj);
-				break;
-			case "ARCHIVEMESSAGE":
-				response = archiveMessage(obj);
 				break;
 			case "CREATEGROUP":
 				response = createGroup(obj);
@@ -65,22 +61,23 @@ public class PostHandler implements HttpHandler {
 		String text = obj.getString("text");
 		JSONArray temp = obj.getJSONArray("recipients");
 		ArrayList<Integer> recipients = new ArrayList<Integer>();
-		for(int i = 0; i < temp.length();i++) {
+		for(int i = 0; i < temp.length(); i++) {
 			recipients.add(temp.getInt(i));			
 		}
 		return jdbc.sendMessage(uID, text, recipients);
 	}
 
 	private String createGroup(JSONObject obj) {
-		return null;
-		// TODO Auto-generated method stub
-
-	}
-
-	private String archiveMessage(JSONObject obj) {
-		return null;
-		// TODO Auto-generated method stub
-
+		JDBC jdbc = new JDBC();
+		
+		int uID = obj.getInt("userID");
+		String name = obj.getString("name");
+		JSONArray temp = obj.getJSONArray("members");
+		ArrayList<Integer> members = new ArrayList<Integer>();
+		for(int i = 0; i < temp.length(); i++) {
+			members.add(temp.getInt(i));			
+		}
+		return jdbc.createGroup(uID, name, members);
 	}
 
 	private String createUser(JSONObject obj) {

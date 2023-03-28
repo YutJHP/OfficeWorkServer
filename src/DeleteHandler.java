@@ -19,6 +19,7 @@ public class DeleteHandler implements HttpHandler {
 		InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
 		BufferedReader br = new BufferedReader(isr);
 		String query = br.lines().collect(Collectors.joining());
+		String response = "";
 		
 		try {
 			JSONObject obj = new JSONObject(query);
@@ -26,6 +27,7 @@ public class DeleteHandler implements HttpHandler {
 			switch(obj.getString("requestType")){
 			
 			case "DELETEMESSAGE":
+				response = delete(obj);
 				break;
 			}
 			
@@ -37,12 +39,20 @@ public class DeleteHandler implements HttpHandler {
 		//parseQuery(query, parameters);
 
 		// send response
-		String response = "hit";
 		exchange.sendResponseHeaders(200, response.length());
 		OutputStream os = exchange.getResponseBody();
 		os.write(response.toString().getBytes());
 		os.close();
 
+	}
+
+	private String delete(JSONObject obj) {
+		JDBC jdbc = new JDBC();
+		
+		int uID = obj.getInt("userID");
+		int mID = obj.getInt("messageID");
+		
+		return jdbc.delete(uID, mID);
 	}
 
 	public static void parseQuery(String query, Map<String, Object> parameters) throws UnsupportedEncodingException {
