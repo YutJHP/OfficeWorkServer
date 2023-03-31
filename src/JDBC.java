@@ -16,7 +16,7 @@ public class JDBC {
 
 	static final String DB_URL = "jdbc:mysql://localhost:3306/chatapp";
 	static final String USER = "root";
-	static final String PASS = "1234";
+	static final String PASS = "AAAAAA";
 
 	public String login(String uName, String pass) {
 				
