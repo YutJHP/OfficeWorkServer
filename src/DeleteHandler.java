@@ -49,7 +49,7 @@ public class DeleteHandler implements HttpHandler {
 	private String delete(JSONObject obj) {
 		JDBC jdbc = new JDBC();
 		
-		int uID = obj.getInt("userID");
+		int uID = obj.getInt("UserID");
 		int mID = obj.getInt("messageID");
 		
 		return jdbc.delete(uID, mID);

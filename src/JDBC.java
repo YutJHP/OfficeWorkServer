@@ -15,7 +15,7 @@ public class JDBC {
 
 	static final String DB_URL = "jdbc:mysql://localhost:3306/chatapp";
 	static final String USER = "root";
-	static final String PASS = "1234";
+	static final String PASS = "12Spotted!";
 
 	public String login(String uName, String pass) {
 				
@@ -53,8 +53,7 @@ public class JDBC {
 		return response;
 	}
 
-	public String createUser(String uName, String pass, String fname, String lname, String position, String email,
-			int id) {
+	public String createUser(String uName, String pass, String fname, String lname, String position, String email) {
 		String response = "{ \"valid\": \"false\" }";
 
 		ArrayList<Integer> IDs = new ArrayList<Integer>();
@@ -68,6 +67,7 @@ public class JDBC {
 			while (rs.next()) {
 				IDs.add(rs.getInt(1));
 				uNames.add(rs.getString(2));
+				System.out.println(rs.getInt(1) +  " | " + rs.getString(2));
 			}
 
 			con.close();
@@ -75,17 +75,21 @@ public class JDBC {
 			e.printStackTrace();
 		}
 
+		System.out.println("THere are this many username: " + uNames.size());
 		for (int i = 0; i < uNames.size(); i++) {
-			if (uName.equals(uNames.get(i)) || id == IDs.get(i)) {
+			if (uName.equals(uNames.get(i))) {
+				System.out.println("triggered early return");
 				return response;
 			}
 		}
+		
+		System.out.println("reached part a");
 
 		try (Connection con = DriverManager.getConnection(DB_URL, USER, PASS)) {
 			// use con here
 			Statement stmt = con.createStatement();
-			String sql = "INSERT INTO `User` VALUES (" + id + ", '" + uName + "', '" + pass + "', '" + fname + "', '"
-					+ lname + "', '" + email + "', 'Online', '" + position + "' );";
+			String sql = "INSERT INTO `User` (Username, Password, Fname, Lname, Email, Active_status, Position) VALUES ('" + uName + "', '" + pass + "', '" + fname + "', '"
+					+ lname + "', '" + email + "', 'offline', '" + position + "' );";
 			stmt.executeUpdate(sql);
 			con.close();
 
@@ -93,6 +97,7 @@ public class JDBC {
 			e.printStackTrace();
 		}
 
+				
 		return "{\"valid\":\"true\"}";
 	}
 
@@ -147,7 +152,7 @@ public class JDBC {
 			usersJSON += "],\n";
 			
 			
-			rs = stmt.executeQuery("SELECT messageowner.User_ID, messageowner.sender, messageowner.Receiver, message.Message_ID, message.MessageText, message.Date_Created\r\n"
+			rs = stmt.executeQuery("SELECT messageowner.User_ID, messageowner.sender, messageowner.Receiver, message.Message_ID, message.MessageText, message.Date_Created, messageowner.Archived_Status\r\n"
 					+ "FROM messageowner\r\n"
 					+ "INNER JOIN message ON messageowner.Message_ID=message.Message_ID\r\n"
 					+ "Where messageowner.sender = true;");
@@ -162,6 +167,7 @@ public class JDBC {
 				ArrayList<String> temp = messageContents.get(rs.getInt(4));
 				temp.add(rs.getString(5));
 				temp.add(rs.getString(6));
+				temp.add(rs.getString(7));
 				messageContents.put(rs.getInt(4), temp);
 			}
 			
@@ -206,7 +212,8 @@ public class JDBC {
 				messagesJSON += "\n],\r\n"
 						+ "       \"id\": \""+ messageID.get(i) +"\",\r\n"
 						+ "       \"text\": \""+ messageContents.get(messageID.get(i)).get(0) +"\",\r\n"
-						+ "       \"timeSent\": \""+ messageContents.get(messageID.get(i)).get(1) +"\"\r\n"
+						+ "       \"timeSent\": \""+ messageContents.get(messageID.get(i)).get(1) +"\",\r\n"
+						+ "       \"archived\": \"" + (messageContents.get(messageID.get(i)).get(2) == "Archived" ? "true" : "false") +"\"\r\n"
 						+ "}";
 				if(i != messageID.size()-1) {
 					messagesJSON += ", \n";
@@ -215,9 +222,7 @@ public class JDBC {
 				}
 			}
 			
-			messagesJSON += "],\n";
-			
-			
+			messagesJSON += "],\n";			
 			
 			rs = stmt.executeQuery("select Group_ID, User_ID from chatapp.groupmembers;");
 			ArrayList<Integer> GID = new ArrayList<Integer>();

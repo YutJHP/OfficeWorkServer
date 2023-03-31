@@ -49,7 +49,7 @@ public class PatchHandler implements HttpHandler {
 	private String updateStatus(JSONObject obj) {
 		JDBC jdbc = new JDBC();
 		
-		int uID = obj.getInt("userID");
+		int uID = obj.getInt("UserID");
 		String status = obj.getString("status");
 		
 		return jdbc.updateStatus(uID, status);
@@ -58,7 +58,7 @@ public class PatchHandler implements HttpHandler {
 	private String archiveMessage(JSONObject obj) {
 		JDBC jdbc = new JDBC();
 		
-		int uID = obj.getInt("userID");
+		int uID = obj.getInt("UserID");
 		int mID = obj.getInt("messageID");
 		
 		return jdbc.archiveMessage(uID, mID);

@@ -27,6 +27,7 @@ public class PostHandler implements HttpHandler {
 		String response = "";
 
 		try {
+			System.out.println(query);
 			JSONObject obj = new JSONObject(query);
 
 			switch (obj.getString("requestType")) {
@@ -60,8 +61,8 @@ public class PostHandler implements HttpHandler {
 	private String sendMessage(JSONObject obj) {
 		JDBC jdbc = new JDBC();
 		
-		int uID = obj.getInt("userID");
-		String text = obj.getString("text");
+		int uID = obj.getInt("UserID");
+		String text = obj.getString("message");
 		JSONArray temp = obj.getJSONArray("recipients");
 		ArrayList<Integer> recipients = new ArrayList<Integer>();
 		for(int i = 0; i < temp.length(); i++) {
@@ -73,7 +74,7 @@ public class PostHandler implements HttpHandler {
 	private String createGroup(JSONObject obj) {
 		JDBC jdbc = new JDBC();
 		
-		int uID = obj.getInt("userID");
+		int uID = obj.getInt("UserID");
 		String name = obj.getString("name");
 		JSONArray temp = obj.getJSONArray("members");
 		ArrayList<Integer> members = new ArrayList<Integer>();
@@ -92,9 +93,8 @@ public class PostHandler implements HttpHandler {
 		String lname = obj.getJSONObject("userData").getString("lastName");
 		String position = obj.getJSONObject("userData").getString("position");
 		String email = obj.getJSONObject("userData").getString("email");
-		int id = obj.getJSONObject("userData").getInt("id");
 		
-		return jdbc.createUser(uName, pass, fname, lname, position, email, id);
+		return jdbc.createUser(uName, pass, fname, lname, position, email);
 	}
 
 	private String login(JSONObject obj) {
@@ -109,7 +109,7 @@ public class PostHandler implements HttpHandler {
 	private String update(JSONObject obj) {
 		JDBC jdbc = new JDBC();
 		
-		int uID = obj.getInt("userID");
+		int uID = obj.getInt("UserID");
 		
 		return jdbc.update(uID);
 	}

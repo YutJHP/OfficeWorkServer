@@ -9,7 +9,7 @@ USE `ChatApp`;
 DROP TABLE IF EXISTS `User`;
 
 CREATE TABLE `User` (
-	`User_ID` bigint(10) NOT NULL,
+	`User_ID` bigint(10) NOT NULL AUTO_INCREMENT,
     `Username` varchar(25) DEFAULT NULL,
     `Password` varchar(25) DEFAULT NULL,
     `Fname` varchar(30) DEFAULT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE `User` (
 DROP TABLE IF EXISTS `Message`;
 
 CREATE TABLE `Message` (
-	`Message_ID` bigint(10) NOT NULL,
+	`Message_ID` bigint(10) NOT NULL AUTO_INCREMENT,
     `MessageText` varchar(5000) DEFAULT NULL,
     `Date_Created` datetime DEFAULT NULL,
     PRIMARY KEY (`Message_ID`)
@@ -59,7 +59,7 @@ CREATE TABLE `messageOwner` (
 DROP TABLE IF EXISTS `Group`;
 
 CREATE TABLE `Group` (
-	`Group_ID` bigint(10) NOT NULL,
+	`Group_ID` bigint(10) NOT NULL AUTO_INCREMENT,
     `GroupName` varchar(15) DEFAULT NULL,
     PRIMARY KEY (`Group_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -71,7 +71,7 @@ CREATE TABLE `Group` (
 DROP TABLE IF EXISTS `groupMembers`;
 
 CREATE TABLE `groupMembers` (
-	`groupMember_ID` bigint(10) NOT NULL,
+	`groupMember_ID` bigint(10) NOT NULL AUTO_INCREMENT,
     `User_ID` int(10) DEFAULT NULL,
     `Group_ID` int(10) DEFAULT NULL,
     PRIMARY KEY (`groupMember_ID`),
