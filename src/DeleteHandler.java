@@ -50,7 +50,7 @@ public class DeleteHandler implements HttpHandler {
 		JDBC jdbc = new JDBC();
 		
 		int uID = obj.getInt("UserID");
-		int mID = obj.getInt("messageID");
+		int mID = obj.getInt("messageId");
 		
 		return jdbc.delete(uID, mID);
 	}

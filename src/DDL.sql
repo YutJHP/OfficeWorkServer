@@ -41,15 +41,13 @@ CREATE TABLE `Message` (
 DROP TABLE IF EXISTS `messageOwner`;
 
 CREATE TABLE `messageOwner` (
-	`User_Message_ID` varchar(10) NOT NULL,
+	`User_Message_ID` int(10) NOT NULL AUTO_INCREMENT,
     `Archived_Status` enum('Archived', 'Inboxed', 'Deleted') DEFAULT NULL,
     `Sender` bool DEFAULT NULL,
     `Receiver` bool DEFAULT NULL,
     `User_ID` int(10) DEFAULT NULL,
     `Message_ID` int(10) DEFAULT NULL,
-    PRIMARY KEY (`User_Message_ID`),
-    KEY `User_ID` (`User_ID`),
-    KEY `Message_ID` (`Message_ID`)
+    PRIMARY KEY (`User_Message_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -71,10 +69,8 @@ CREATE TABLE `Group` (
 DROP TABLE IF EXISTS `groupMembers`;
 
 CREATE TABLE `groupMembers` (
-	`groupMember_ID` bigint(10) NOT NULL AUTO_INCREMENT,
+	`groupMember_ID` int(10) NOT NULL AUTO_INCREMENT,
     `User_ID` int(10) DEFAULT NULL,
     `Group_ID` int(10) DEFAULT NULL,
-    PRIMARY KEY (`groupMember_ID`),
-    KEY `User_ID` (`User_ID`),
-    KEY `Group_ID` (`Group_ID`)
+    PRIMARY KEY (`groupMember_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

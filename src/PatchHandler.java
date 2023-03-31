@@ -59,7 +59,7 @@ public class PatchHandler implements HttpHandler {
 		JDBC jdbc = new JDBC();
 		
 		int uID = obj.getInt("UserID");
-		int mID = obj.getInt("messageID");
+		int mID = obj.getInt("messageId");
 		
 		return jdbc.archiveMessage(uID, mID);
 	}

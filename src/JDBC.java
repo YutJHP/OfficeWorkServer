@@ -8,6 +8,7 @@ import java.time.LocalTime;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.json.*;
 
@@ -154,75 +155,100 @@ public class JDBC {
 			
 			rs = stmt.executeQuery("SELECT messageowner.User_ID, messageowner.sender, messageowner.Receiver, message.Message_ID, message.MessageText, message.Date_Created, messageowner.Archived_Status\r\n"
 					+ "FROM messageowner\r\n"
-					+ "INNER JOIN message ON messageowner.Message_ID=message.Message_ID\r\n"
-					+ "Where messageowner.sender = true;");
-			ArrayList<Integer> sender = new ArrayList<Integer>();
-			ArrayList<Integer> messageID = new ArrayList<Integer>();
-			HashMap<Integer, ArrayList<String>> messageContents = new HashMap<Integer, ArrayList<String>>();
+					+ "INNER JOIN message ON messageowner.Message_ID=message.Message_ID\r\n;");
 			
-			while(rs.next()) {
-				sender.add(rs.getInt(1));
-				messageID.add(rs.getInt(4));
-				messageContents.put(rs.getInt(4), new ArrayList<String>());
-				ArrayList<String> temp = messageContents.get(rs.getInt(4));
-				temp.add(rs.getString(5));
-				temp.add(rs.getString(6));
-				temp.add(rs.getString(7));
-				messageContents.put(rs.getInt(4), temp);
+			class MessageRow {
+				int userID;
+				boolean sender;
+				boolean receiver;
+				int messageID;
+				String text;
+				String dateCreated;
+				String archivedStatus;
+				
+				public MessageRow(int userID, boolean sender, boolean receiver, int messageID, String text,
+						String dateCreated, String archivedStatus) {
+					super();
+					this.userID = userID;
+					this.sender = sender;
+					this.receiver = receiver;
+					this.messageID = messageID;
+					this.text = text;
+					this.dateCreated = dateCreated;
+					this.archivedStatus = archivedStatus;
+				}				
 			}
 			
-			
-			rs = stmt.executeQuery("SELECT messageowner.User_ID, message.Message_ID\r\n"
-					+ "FROM messageowner\r\n"
-					+ "INNER JOIN message ON messageowner.Message_ID=message.Message_ID\r\n"
-					+ "Where messageowner.sender = false;");
-			
-			HashMap<Integer, ArrayList<Integer>> recipients = new HashMap<Integer, ArrayList<Integer>>();
-			ArrayList<Integer> receivers = new ArrayList<Integer>();
-			
+			ArrayList<MessageRow> MessageRows = new ArrayList<>();
 			while (rs.next()) {
-				receivers.add(rs.getInt(1));
-				if(recipients.get(rs.getInt(1))==null) {
-					recipients.put(rs.getInt(1), new ArrayList<Integer>());	
-					ArrayList<Integer> temp = recipients.get(rs.getInt(1));
-					temp.add(rs.getInt(2));
-					recipients.put(rs.getInt(1), temp);	
-				}else {
-					ArrayList<Integer> temp = recipients.get(rs.getInt(1));
-					temp.add(rs.getInt(2));
-					recipients.put(rs.getInt(1), temp);					
-				}
+				MessageRows.add(new MessageRow(
+						rs.getInt(1),
+						rs.getBoolean(2),
+						rs.getBoolean(3),
+						rs.getInt(4),
+						rs.getString(5), 
+						rs.getString(6),
+						rs.getString(7)));
 			}
 			
-			
-			for(int i = 0; i < sender.size(); i++) {
-				messagesJSON += "{\r\n"
-						+ "       \"sender\": "+ sender.get(i) +",\r\n"
-						+ "       \"recipients\": [ ";
-
+			class Message {				
+				int sender;
+				ArrayList<Integer> recipients = new ArrayList<>();
+				String archivedStatus;
+				String text;
+				String timeSent;
+				boolean hasActiveUser = false;
 				
-				for(int m = 0; m < receivers.size(); m++) {
-					// TODO
-					messagesJSON += receivers.get(m) + " ";
-					if(m != receivers.size()-1) {
-						messagesJSON += ", ";
+				public JSONObject getJson() {
+					JSONObject json = new JSONObject();
+					json.put("text", text);
+					json.put("timeSent", timeSent);
+					json.put("archived", archivedStatus.equals("Archived"));
+					json.put("sender", sender);
+					JSONArray recipientsJson = new JSONArray();
+					for (int recipient: recipients) {
+						recipientsJson.put(recipient);
 					}
+					json.put("recipients", recipientsJson);
+					return json;
 				}
-				
-				messagesJSON += "\n],\r\n"
-						+ "       \"id\": \""+ messageID.get(i) +"\",\r\n"
-						+ "       \"text\": \""+ messageContents.get(messageID.get(i)).get(0) +"\",\r\n"
-						+ "       \"timeSent\": \""+ messageContents.get(messageID.get(i)).get(1) +"\",\r\n"
-						+ "       \"archived\": \"" + (messageContents.get(messageID.get(i)).get(2) == "Archived" ? "true" : "false") +"\"\r\n"
-						+ "}";
-				if(i != messageID.size()-1) {
-					messagesJSON += ", \n";
-				}else {
-					messagesJSON += "\n";
+			}			
+			HashMap<Integer, Message> messages = new HashMap<>();
+			
+			for (MessageRow row: MessageRows) {
+				Message message;
+				if (!messages.containsKey(row.messageID)) {
+					message = new Message();
+					messages.put(row.messageID, message);
+					message.text = row.text;
+					message.timeSent = row.dateCreated;
+				} else {
+					message = messages.get(row.messageID);
+				}
+				if (row.sender) {
+					message.sender = row.userID;
+				}
+				if (row.receiver) {
+					message.recipients.add(row.userID);
+				}
+				if (row.userID == uID) {
+					message.archivedStatus = row.archivedStatus;
+					message.hasActiveUser = true;
+					
 				}
 			}
 			
-			messagesJSON += "],\n";			
+			JSONArray messagesJson = new JSONArray();
+			for (Map.Entry<Integer, Message> entry: messages.entrySet()) {
+				Message message = entry.getValue();
+				if (message.hasActiveUser && !message.archivedStatus.equals("Deleted")) {
+					JSONObject messageJson = message.getJson();
+					messageJson.put("id", entry.getKey());
+					messagesJson.put(messageJson);
+				}
+			}
+			
+			messagesJSON = " \"messages\":" + messagesJson.toString() + ", ";	
 			
 			rs = stmt.executeQuery("select Group_ID, User_ID from chatapp.groupmembers;");
 			ArrayList<Integer> GID = new ArrayList<Integer>();
@@ -234,7 +260,9 @@ public class JDBC {
 					temp.add(rs.getInt(2));
 					groupMembers.put(rs.getInt(1), temp);
 				}else {
-					groupMembers.put(rs.getInt(1), new ArrayList<Integer>());
+					ArrayList<Integer> temp = new ArrayList<Integer>();
+					temp.add(rs.getInt(2));
+					groupMembers.put(rs.getInt(1), temp);
 					GID.add(rs.getInt(1));
 				}
 			}
@@ -251,13 +279,11 @@ public class JDBC {
 				groupsJSON += "{\r\n"
 						+ "       \"id\": "+ GID.get(i) +",\r\n"
 						+ "       \"name\": \""+ gNames.get(GID.get(i)) +"\",\r\n"
-						+ "       \"members\": [ ";
+						+ "       \"members\":  ";
 				
 				groupsJSON += groupMembers.get(GID.get(i)) + " ";
-				System.out.println(groupMembers);
-
 				
-				groupsJSON += "\n]\r\n" + "}";
+				groupsJSON += "\n\r\n" + "}";
 				if(i != GID.size()-1) {
 					groupsJSON += ", \n";
 				}else {
@@ -265,9 +291,7 @@ public class JDBC {
 				}
 			}
 			
-			groupsJSON += "]\n";
-			
-			
+			groupsJSON += "]\n";			
 
 			con.close();
 		} catch (SQLException e) {
@@ -279,75 +303,48 @@ public class JDBC {
 	}
 
 	public String sendMessage(int uID, String text, ArrayList<Integer> recipients) {
-		ArrayList<Integer> mID = new ArrayList<Integer>();
-		int newMessageID = 1;
-
+		
+		int newMessageID = 0;
 		try (Connection con = DriverManager.getConnection(DB_URL, USER, PASS)) {
 			// use con here
 			Statement stmt = con.createStatement();
-			ResultSet rs = stmt.executeQuery("select Message_ID from chatapp.Message ORDER BY Message_ID");
-
-			while (rs.next()) {
-				mID.add(rs.getInt(1));
-			}
-
-			for (int i = 0; i < mID.size(); i++) {
-				if (mID.get(i) == newMessageID) {
-					newMessageID++;
-				}
-			}
 			
 			java.time.LocalDateTime date = java.time.LocalDateTime.now();
 			String dateTime = date.toString();
 			dateTime.replace("T", " ");
 
-			String sql = "INSERT INTO `Message` VALUES (" + newMessageID + ", '" + text + "', '" + dateTime  + "' );";
+			String sql = "INSERT INTO `Message` (MessageText, Date_Created) VALUES ('" + text + "', '" + dateTime  + "' );";
 			stmt.executeUpdate(sql);
+			
+			ResultSet rs = stmt.executeQuery("SELECT LAST_INSERT_ID()");
+			rs.next();
+			newMessageID = rs.getInt(1);
 
 			con.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 
-		int newMessageOwnerID = 1;
-		ArrayList<Integer> MOID = new ArrayList<Integer>();
-		
+				
 		try (Connection con = DriverManager.getConnection(DB_URL, USER, PASS)) {
 			// use con here
 
 			Statement stmt = con.createStatement();
-			ResultSet rs = stmt.executeQuery("select User_Message_ID from chatapp.messageOwner ORDER BY User_Message_ID");
 
-			while (rs.next()) {
-				MOID.add(rs.getInt(1));
-			}
-			
 			String sql = "";
 			
 			if(recipients.contains(uID)) {
-				sql = "INSERT INTO `messageOwner` VALUES (" + newMessageOwnerID + ", 'Inboxed', true, true, " + uID + ", " + newMessageID + ");";
+				sql = "INSERT INTO `messageOwner` (Archived_Status, Sender, Receiver, User_ID, Message_ID) VALUES ('Inboxed', true, true, " + uID + ", " + newMessageID + ");";
 			}else {
-				sql = "INSERT INTO `messageOwner` VALUES (" + newMessageOwnerID + ", 'Inboxed', true, false, " + uID + ", " + newMessageID + ");";
+				sql = "INSERT INTO `messageOwner` (Archived_Status, Sender, Receiver, User_ID, Message_ID) VALUES ('Inboxed', true, false, " + uID + ", " + newMessageID + ");";
 			}
 			stmt.executeUpdate(sql);
 			
-			for (int n = 0; n < recipients.size(); n++) {
-
-				for (int i = 0; i < MOID.size(); i++) {
-					if (MOID.get(i) == newMessageOwnerID) {
-						newMessageOwnerID++;
-					}
-				}
-					if(recipients.get(n)==uID) {
-						
-					}else {
-						sql = "INSERT INTO `messageOwner` VALUES (" + newMessageOwnerID + ", 'Inboxed', false, true, " + recipients.get(n) + ", "
-								+ newMessageID + ");";
-					}
-				
-				MOID.add(newMessageOwnerID);
-
-				stmt.executeUpdate(sql);
+			for (int recipient: recipients) {
+				if (recipient != uID) {
+					sql = "INSERT INTO `messageOwner` (Archived_Status, Sender, Receiver, User_ID, Message_ID) VALUES ('Inboxed', false, true, " + recipient + ", " + newMessageID + ");";
+					stmt.executeUpdate(sql);
+				}				
 			}
 			con.close();
 
@@ -362,63 +359,39 @@ public class JDBC {
 
 		ArrayList<String> gNames = new ArrayList<String>();
 		ArrayList<Integer> gID = new ArrayList<Integer>();
-		int newGroupID = 1;
+		
+		int newGroupID = 0;
 
 		try (Connection con = DriverManager.getConnection(DB_URL, USER, PASS)) {
 			// use con here
 			Statement stmt = con.createStatement();
-			ResultSet rs = stmt.executeQuery("select Group_ID, GroupName from chatapp.group ORDER BY Group_ID");
+			ResultSet rs = stmt.executeQuery("select GroupName from chatapp.group");
 
 			while (rs.next()) {
-				gID.add(rs.getInt(1));
-				gNames.add(rs.getString(2));
-			}
+				if (name.equals(rs.getString(1))) return response;
+			}			
 
-			for (int i = 0; i < gNames.size(); i++) {
-				if (name.equals(gNames.get(i))) {
-					return response;
-				}
-			}
-
-			for (int i = 0; i < gID.size(); i++) {
-				if (gID.get(i) == newGroupID) {
-					newGroupID++;
-				}
-			}
-
-			String sql = "INSERT INTO `group` VALUES (" + newGroupID + ", '" + name + "' );";
+			String sql = "INSERT INTO `group` (GroupName) VALUES ('" + name + "');";
 			stmt.executeUpdate(sql);
+			
+			rs = stmt.executeQuery("SELECT LAST_INSERT_ID()");
+			rs.next();
+			newGroupID = rs.getInt(1);			
 
 			con.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
-		}
-
-		int newGroupMemebersID = 1;
-		ArrayList<Integer> GMID = new ArrayList<Integer>();
+		}		
 
 		try (Connection con = DriverManager.getConnection(DB_URL, USER, PASS)) {
 			// use con here
 
 			Statement stmt = con.createStatement();
-			ResultSet rs = stmt.executeQuery("select groupMember_ID from chatapp.groupMembers ORDER BY groupMember_ID");
 
-			while (rs.next()) {
-				GMID.add(rs.getInt(1));
-			}
+			for (int n = 0; n < member.size(); n++) {				
 
-			for (int n = 0; n < member.size(); n++) {
-
-				for (int i = 0; i < GMID.size(); i++) {
-					if (GMID.get(i) == newGroupMemebersID) {
-						newGroupMemebersID++;
-					}
-				}
-
-				String sql = "INSERT INTO `groupMembers` VALUES (" + newGroupMemebersID + ", " + member.get(n) + ", "
+				String sql = "INSERT INTO `groupMembers` (User_ID, Group_ID) VALUES (" + member.get(n) + ", "
 						+ newGroupID + ");";
-				GMID.add(newGroupMemebersID);
-
 				stmt.executeUpdate(sql);
 			}
 			con.close();

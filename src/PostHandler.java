@@ -75,7 +75,7 @@ public class PostHandler implements HttpHandler {
 		JDBC jdbc = new JDBC();
 		
 		int uID = obj.getInt("UserID");
-		String name = obj.getString("name");
+		String name = obj.getString("groupName");
 		JSONArray temp = obj.getJSONArray("members");
 		ArrayList<Integer> members = new ArrayList<Integer>();
 		for(int i = 0; i < temp.length(); i++) {
