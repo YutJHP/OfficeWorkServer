@@ -25,10 +25,6 @@ public class PatchHandler implements HttpHandler {
 			JSONObject obj = new JSONObject(query);
 			
 			switch(obj.getString("requestType")){
-			
-			case "UPDATE":
-				response = update(obj);
-				break;
 			case "UPDATESTATUS":
 				response = updateStatus(obj);
 				break;
@@ -36,8 +32,6 @@ public class PatchHandler implements HttpHandler {
 				response = archiveMessage(obj);
 				break;
 			}
-			
-			System.out.println(" Object created " + obj.getString("uName"));
 		}catch (JSONException e) {
 			System.out.println(e + " Something unexpected went wrong. ");
 		}
@@ -51,19 +45,12 @@ public class PatchHandler implements HttpHandler {
 
 	}
 	
-	private String update(JSONObject obj) {
-		JDBC jdbc = new JDBC();
-		
-		int uID = obj.getInt("userID");
-		
-		return jdbc.update(uID);
-	}
 
 	private String updateStatus(JSONObject obj) {
 		JDBC jdbc = new JDBC();
 		
 		int uID = obj.getInt("userID");
-		int status = obj.getInt("status");
+		String status = obj.getString("status");
 		
 		return jdbc.updateStatus(uID, status);
 	}

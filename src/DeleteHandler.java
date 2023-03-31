@@ -54,9 +54,5 @@ public class DeleteHandler implements HttpHandler {
 		
 		return jdbc.delete(uID, mID);
 	}
-
-	public static void parseQuery(String query, Map<String, Object> parameters) throws UnsupportedEncodingException {
-		
-	}
 	
 }

@@ -42,6 +42,9 @@ public class PostHandler implements HttpHandler {
 			case "SENDMESSAGE":
 				response = sendMessage(obj);
 				break;
+			case "UPDATE":
+				response = update(obj);
+				break;
 			}
 		} catch (JSONException e) {
 			System.out.println(" Something unexpected went wrong. " + e);
@@ -89,7 +92,7 @@ public class PostHandler implements HttpHandler {
 		String lname = obj.getJSONObject("userData").getString("lastName");
 		String position = obj.getJSONObject("userData").getString("position");
 		String email = obj.getJSONObject("userData").getString("email");
-		String id = obj.getJSONObject("userData").getString("id");
+		int id = obj.getJSONObject("userData").getInt("id");
 		
 		return jdbc.createUser(uName, pass, fname, lname, position, email, id);
 	}
@@ -101,5 +104,13 @@ public class PostHandler implements HttpHandler {
 		String pass = obj.getString("password");
 		
 		return jdbc.login(uName, pass);
+	}
+	
+	private String update(JSONObject obj) {
+		JDBC jdbc = new JDBC();
+		
+		int uID = obj.getInt("userID");
+		
+		return jdbc.update(uID);
 	}
 }
